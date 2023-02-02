@@ -6,7 +6,7 @@ import { UserModel, validateRegisterUser } from "../models/user.js";
 const checkEmailExist = async (email) => {
   const result = await UserModel.findOne({
     email: email,
-  }).lean();
+  });
   return result;
 };
 
@@ -42,11 +42,6 @@ export const signup = async (req, res) => {
         return handleResponse({
           res,
           msg: "Registered Successfully",
-          data: {
-            id: userData._id,
-            name: userData.name,
-            email: userData.email,
-          },
         });
       }
     });
@@ -91,11 +86,30 @@ export const login = async (req, res) => {
 
     userData.token = await getAccessToken(userData._id);
 
+    await userData.save();
+
     return handleResponse({
       res,
       msg: "Login Successfully",
       data: userData.token,
     });
+  } catch (err) {
+    return handleError({
+      res,
+      statusCode: err.statusCode ?? 500,
+      err_msg: err.message || "Something Went Wrong",
+      err: err,
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const userData = await UserModel.findOneAndUpdate(
+      { _id: req.userId },
+      { $set: { token: "" } }
+    );
+    return handleResponse({ res, ...userData });
   } catch (err) {
     return handleError({
       res,
