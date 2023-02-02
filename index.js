@@ -2,33 +2,14 @@ import bodyParser from "body-parser";
 import express, { json } from "express";
 import * as dotenv from "dotenv";
 import mongoose from "mongoose";
-import ConnectMongoDBSession from "connect-mongodb-session";
-import session from "express-session";
 import config from "./config/index.js";
 import apiRoute from "./routes/index.js";
 
 dotenv.config();
 const app = express();
 
-const MongoDBStore = ConnectMongoDBSession(session);
-
-const store = new MongoDBStore({
-  uri: config.db.uri,
-  collection: "session",
-});
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(json());
-
-app.use(
-  session({
-    cookie: { maxAge: 999999999999 },
-    secret: `It's top Secret`,
-    resave: true,
-    saveUninitialized: false,
-    store: store,
-  })
-);
 
 app.use((req, res, next) => {
   res.setHeader(
@@ -50,7 +31,7 @@ app.get("/", (req, res) => {
   res.end();
 });
 
-app.use("/api/users", apiRoute);
+app.use("/api", apiRoute);
 
 mongoose
   .connect(config.db.uri, config.db.options)
